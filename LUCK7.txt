@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>91 Club – Number Betting</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{margin:0;background:#0b1220;font-family:Arial;color:#fff}
+.header{background:linear-gradient(90deg,#f97316,#ef4444);padding:14px;text-align:center;font-size:22px;font-weight:bold}
+.container{max-width:430px;margin:auto;padding:15px}
+.card{background:#111827;border-radius:14px;padding:15px;margin-bottom:15px}
+.balance{display:flex;justify-content:space-between;font-size:18px}
+.timer{text-align:center;font-size:26px;color:#22c55e;margin-top:10px}
+input{width:100%;padding:12px;border-radius:10px;border:none;font-size:16px}
+
+.colors,.bigsmall{display:flex;justify-content:space-between}
+.colors button,.bigsmall button{
+  width:32%;padding:12px;border:none;border-radius:12px;color:#fff;font-weight:bold
+}
+.green{background:#22c55e}
+.red{background:#ef4444}
+.violet{background:#a855f7}
+.big{background:#0ea5e9}
+.small{background:#f59e0b}
+
+.numbers{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+}
+.numbers button{
+  height:55px;border-radius:50%;
+  border:none;background:#1f2933;
+  color:#fff;font-size:18px;
+}
+
+.active{outline:3px solid #facc15}
+.history{font-size:13px}
+hr{border:0;border-top:1px solid #374151}
+</style>
+</head>
+
+<body>
+
+<div class="header">91 CLUB</div>
+
+<div class="container">
+
+<div class="card">
+  <div class="balance">
+    <div>Balance</div>
+    <div>₹ <span id="bal">5000</span></div>
+  </div>
+  <div class="timer">⏱ <span id="time">30</span>s</div>
+</div>
+
+<div class="card">
+  <input type="number" id="betAmount" placeholder="Enter Bet Amount (₹1–10000)">
+</div>
+
+<!-- COLOR -->
+<div class="card">
+<h3>Color</h3>
+<div class="colors">
+<button class="green" onclick="toggle('color','Green',this)">Green</button>
+<button class="violet" onclick="toggle('color','Violet',this)">Violet</button>
+<button class="red" onclick="toggle('color','Red',this)">Red</button>
+</div>
+</div>
+
+<!-- NUMBER -->
+<div class="card">
+<h3>Number (Click = Bet)</h3>
+<div class="numbers" id="nums"></div>
+</div>
+
+<!-- BIG SMALL -->
+<div class="card">
+<h3>Big / Small</h3>
+<div class="bigsmall">
+<button class="small" onclick="toggle('bs','Small',this)">Small</button>
+<button class="big" onclick="toggle('bs','Big',this)">Big</button>
+</div>
+</div>
+
+<div class="card">
+Selected Bet: <span id="sel">None</span><br><br>
+Result: <span id="res">Waiting…</span>
+</div>
+
+<div class="card history">
+<h3>Betting History</h3>
+<div id="betHistory"></div>
+</div>
+
+</div>
+
+<script>
+let time=30,balance=5000;
+let bets={number:[],color:[],bs:[]};
+let history=[];
+
+// create numbers
+const nums=document.getElementById("nums");
+for(let i=0;i<=9;i++){
+  let b=document.createElement("button");
+  b.innerText=i;
+  b.onclick=()=>toggle('number',i,b);
+  nums.appendChild(b);
+}
+
+// timer
+setInterval(()=>{
+  time--;
+  if(time<=0){time=30;result();}
+  document.getElementById("time").innerText=time;
+},1000);
+
+function toggle(type,val,btn){
+  if(bets[type].includes(val)){
+    bets[type]=bets[type].filter(x=>x!==val);
+    btn.classList.remove("active");
+  }else{
+    bets[type].push(val);
+    btn.classList.add("active");
+  }
+  showSel();
+}
+
+function showSel(){
+  let t=[];
+  bets.number.length&&t.push("Number:"+bets.number.join(","));
+  bets.color.length&&t.push("Color:"+bets.color.join(","));
+  bets.bs.length&&t.push("BS:"+bets.bs.join(","));
+  sel.innerText=t.join(" | ")||"None";
+}
+
+function result(){
+  let amt=+betAmount.value;
+  if(amt<1||amt>10000||amt>balance){reset();return;}
+
+  let n=Math.floor(Math.random()*10);
+  let c=n%2==0?"Green":"Red";
+  let s=n<=4?"Small":"Big";
+  let win=0,loss=0;
+
+  bets.number.length&&(bets.number.includes(n)?win+=amt*9:loss+=amt);
+  bets.color.forEach(x=>x==c?win+=amt*2:loss+=amt);
+  bets.bs.forEach(x=>x==s?win+=amt*2:loss+=amt);
+
+  balance+=win-loss;
+  bal.innerText=balance;
+  res.innerText=`${n} (${c}, ${s}) | +₹${win} -₹${loss}`;
+
+  history.unshift(
+    `Bet ₹${amt} | ${sel.innerText} → ${n}(${c},${s}) | +₹${win} -₹${loss}`
+  );
+  history=history.slice(0,10);
+  betHistory.innerHTML=history.join("<hr>");
+
+  reset();
+}
+
+function reset(){
+  bets={number:[],color:[],bs:[]};
+  document.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+  betAmount.value="";
+  showSel();
+}
+
+const sel=document.getElementById("sel");
+const res=document.getElementById("res");
+const bal=document.getElementById("bal");
+const betHistory=document.getElementById("betHistory");
+</script>
+
+</body>
+</html>
